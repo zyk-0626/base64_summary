@@ -1,25 +1,12 @@
-# base64_summary
-关于文本、文件的base64编码、解码
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-## 字符串文本
+#include <openssl/bio.h>
+#include <openssl/evp.h>
+#include <openssl/buffer.h>
 
-### 编码
-
-#### 具体流程
-- 创建过滤器 b64
-- 创建内存 bio
-- 将内存 bio 与过滤器 b64 链接
-- 对 bio 进行不换行
-- 将字符串文本 str 写进内存 bio
-- 刷新一遍bio
-- 创建内存缓冲区 buf
-- 把内存 bio 写进缓冲区 buf
-- 动态分配堆空间 data
-- 把 buf 的内容写到 data
-- 在 data 结尾加上 '\0';
-- 释放 bio
-- 返回堆空间 data
-```c
+// 字符串文本编码
 char *encode(char *str)
 {
     // 过滤器
@@ -53,7 +40,11 @@ char *encode(char *str)
 
     return data;
 }
-```
-
-### 解码
-
+int main(int argc, char const *argv[])
+{
+    // 字符串文本
+    char *str="hello";
+    char *base64=encode(str);
+    printf("%s\n",base64);
+    return 0;
+}
