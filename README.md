@@ -90,3 +90,75 @@ char *decode(char *data, int *len)
     return buf;
 }
 ```
+
+## 文件文本
+
+### 编码
+
+#### 具体流程
+- 打开要读取的文件（二进制模式）
+- 打开要生成的文件（文本模式）
+- 创建 b64 过滤器
+- 将过滤器与输出文件链接
+- 循环读取输入文件内容到缓冲区
+- 将缓冲区内容写入输出文件（自动进行 base64 编码）
+- 刷新输出文件
+- 释放所有 BIO 资源
+
+```c
+void encode_file(char *in_file, char *out_file)
+{
+    // 打开读取的文件
+    BIO *in = BIO_new(BIO_new_file(in_file, "rb"));
+    // 打开要生成的文件
+    BIO *out = BIO_new(BIO_new_file(out_file, "w"));
+    // 过滤器 b64
+    BIO *b64 = BIO_new(BIO_f_base64());
+    // 过滤器连接out
+    out = BIO_push(b64, out);
+
+    char buf[1024 * 4];
+    int n;
+    while ((n = BIO_read(in, buf, sizeof(buf))) > 0)
+    {
+        BIO_write(out, buf, n);
+    }
+    BIO_flush(out);
+    BIO_free_all(in);
+    BIO_free_all(out);
+    printf("ok\n");
+}
+```
+
+### 解码
+
+#### 具体流程
+- 打开要读取的 base64 文件（文本模式）
+- 打开要生成的文件（二进制模式）
+- 创建 b64 过滤器
+- 将过滤器与输入文件链接
+- 循环读取输入文件内容（自动进行 base64 解码）
+- 将解码后的内容写入输出文件
+- 刷新输出文件
+- 释放所有 BIO 资源
+
+```c
+void decode_file(char *in_file, char *out_file)
+{
+    BIO *in = BIO_new_file(in_file, "r");
+    BIO *out = BIO_new_file(out_file, "wb");
+    // 链接 b64 和 in
+    in = BIO_push(b64, in);
+
+    char buf[1024];
+    int n;
+    while ((n = BIO_read(in, buf, sizeof(buf))) > 0)
+    {
+        BIO_write(out, buf, n);
+    }
+    BIO_flush(out);
+    BIO_free_all(in);
+    BIO_free_all(out);
+    printf("ok\n");
+}
+```
