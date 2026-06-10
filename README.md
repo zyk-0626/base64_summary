@@ -57,3 +57,36 @@ char *encode(char *str)
 
 ### 解码
 
+#### 具体流程
+- 创建 b64 过滤器
+- 获取输入数据长度
+- 创建内存 bio 并写入数据
+- 将内存 bio 与过滤器 b64 链接
+- 对 bio 进行不换行
+- 动态分配堆空间 buf
+- 从 bio 中读取解码后的数据到 buf，返回值存入 len
+- 释放 bio
+- 返回堆空间 buf
+
+```c
+char *decode(char *data, int *len)
+{
+    // b64 过滤器
+    BIO *b64 = BIO_new(BIO_f_base64());
+    // 获取输入数据长度
+    int input_len = strlen(data);
+
+    // 把data数据写进到bio里面
+    BIO *bio = BIO_new_mem_buf(data, input_len);
+    // 链接过滤器和内存
+    bio = BIO_push(b64, bio);
+    // bio不换行
+    BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
+
+    char *buf = malloc(input_len);
+    *len = BIO_read(bio, buf, input_len);
+    BIO_free_all(bio);
+
+    return buf;
+}
+```
